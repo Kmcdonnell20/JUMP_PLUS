@@ -14,11 +14,7 @@ public class Movie {
         this.id = id;
         this.title = title;
         this.rating = rating;
-        if (ratings == null) {
-            this.ratings = new ArrayList<>();
-        } else {
-            this.ratings = ratings;
-        }
+        this.ratings = new ArrayList<>();
     }
 
     public int getId() {
@@ -70,7 +66,7 @@ public class Movie {
         double sum = this.ratings.stream().mapToDouble(Double::doubleValue).sum();
         double newRating = sum / this.ratings.size();
         this.setRating(newRating);
-        System.out.println("list: " + newRating);
+        // System.out.println("list: " + newRating);
     }
     
 

@@ -21,23 +21,32 @@ public class Movie_runner {
     public static void main(String[] args) throws Exception {
         Scanner sc = new Scanner(System.in);
         System.out.println("Welcome to Movie Tracker!");
-
+    
         userDao = new UserDaoSql();
         User_registration user = new User_registration(0, null, null);
-
-        boolean isLoggedIn = false; // Add a variable to indicate whether the user is logged in or not
-
-        while (!isLoggedIn) { // Loop until the user logs in or creates a new user
+    
+        boolean isLoggedIn = false;
+    
+        while (!isLoggedIn) {
             System.out.println("Do you want to create a new user? (Y/N)");
             String choice = sc.nextLine();
-
+    
             if (choice.equalsIgnoreCase("Y")) {
-                System.out.println("Enter a email: ");
-                String email = sc.nextLine();
-
+                String email;
+                while (true) {
+                    System.out.println("Enter a valid email: ");
+                    email = sc.nextLine();
+                    // Use regex to validate the email format
+                    if (email.matches("^[\\w-_.+]*[\\w-_.]@[\\w]+[.][\\w]+([.][\\w]+)*$")) {
+                        break;
+                    } else {
+                        System.out.println("Invalid email format. Please try again.");
+                    }
+                }
+    
                 System.out.println("Enter a password: ");
                 String password = sc.nextLine();
-
+    
                 user = userDao.createUser(email, password);
                 if (user != null) {
                     System.out.println("User created successfully.");
@@ -48,14 +57,14 @@ public class Movie_runner {
             } else if (choice.equalsIgnoreCase("N")) {
                 System.out.println("Enter your email: ");
                 String username = sc.nextLine();
-
+    
                 System.out.println("Enter your password: ");
                 String password = sc.nextLine();
-
+    
                 user = userDao.login(username, password);
                 if (user != null) {
                     System.out.println("Login successful. Welcome " + user.getEmail() + "!");
-                    isLoggedIn = true; // Set the variable to true when the user logs in
+                    isLoggedIn = true;
                 } else {
                     System.out.println("Invalid email or password.");
                     return;
@@ -65,9 +74,10 @@ public class Movie_runner {
                 return;
             }
         }
-
+    
         menu(user);
     }
+    
 
     public static void menu(User_registration user) {
         movieDao = new MovieDaoSql();
