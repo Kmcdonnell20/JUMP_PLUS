@@ -6,163 +6,117 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-//import java.sql.Statement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import Users.User_registration;
+
 import connection.ConnectionManager;
 
-public class UserDaoSql implements UserDao{
+public class UserDaoSql implements UserDao {
 
-	// Connection used for all methods
-	private Connection conn;
+    private Connection conn;
+
+    public UserDaoSql() throws SQLException, FileNotFoundException, IOException, ClassNotFoundException {
+        conn = ConnectionManager.getConnection();
+    }
+
+    public User_registration createUser(String email, String password) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("INSERT INTO user (email, password) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                return null;
+            }
+
+            ResultSet generatedKeys = stmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                int id = generatedKeys.getInt(1);
+                return new User_registration(id, email, password);
+            } else {
+                return null;
+            }
+        } finally {
+            ConnectionManager.closeConnection(conn, stmt);
+        }
+    }
+
+    @Override
+    public User_registration login(String email, String password) throws SQLException {
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("SELECT userId, email, password FROM user WHERE email = ? AND password = ?");
+            stmt.setString(1, email);
+            stmt.setString(2, password);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("userId");
+                return new User_registration(id, email, password);
+            } else {
+                return null;
+            }
+        } finally {
+            ConnectionManager.closeConnection(conn, stmt);
+        }
+    }
+
+	
 
 	@Override
-	public void setConnection() throws FileNotFoundException, ClassNotFoundException, IOException, SQLException {
-		conn = ConnectionManager.getConnection();
-	}
+public Optional<User_registration> validateUser(String email, String password) throws SQLException {
+    try {
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM user WHERE email = ? AND password = ?");
+        stmt.setString(1, email);
+        stmt.setString(2, password);
 
-// 	@Override
-// 	public Optional<User> validateUser(String username, String password) {
-// 		try( PreparedStatement pstmt = conn.prepareStatement("select * from user where username = ? and password = ?");){
-// 			  pstmt.setString(1, username);
-// 	          pstmt.setString(2, password);
-	          
-// 	          ResultSet rs = pstmt.executeQuery();
-	          
-// 	          if( rs.next() ) {
-// 	        	  int userId = rs.getInt("user_id");
-// 	        	  String firstName = rs.getString("first_name");
-// 	        	  String lastName = rs.getString("last_name");
-// 	        	  String email = rs.getString("email");
-// 	        	  String usrname = rs.getString("username");
-// 	        	  String pass = rs.getString("password");
-	        	  
-// 	        	  rs.close();
-	        	  
-// 	        	  // Creating the User object
-// 	        	  User user = new User(userId, firstName, lastName, email, usrname, pass);
-	        	  
-// 	        	  // placing it in the Optional
-// 	        	  Optional<User> userFound = Optional.of(user);
-	        	  
-// 	        	  return userFound;
-// 	          } else {
-// 	        	  rs.close();
-// 	        	  return Optional.empty();
-// 	          }
-	          
-	          
-// 		} catch (SQLException e) {
-// 			System.out.println("Cannot verify user due to connection issues");
-// 			//e.printStackTrace();
-// 			return Optional.empty();
-// 		}
-// 	}
-	
-// 	// This method will add a movie into the movie_user table where the progression is tracked
-// 	public boolean addMovieForProgress(User user, int movie_id) {
-// 		try( PreparedStatement pstmt = conn.prepareStatement("insert into user_movie(user_id, movie_id, status)"
-// 				+ " values(?, ?, ?)")){
-// 			pstmt.setInt(1, user.getUserId());
-// 			pstmt.setInt(2, movie_id);
-// 			pstmt.setString(3, "NC"); // Set to be "not complete"
-			
-// 			int count = pstmt.executeUpdate();
-// 			if(count > 0) { // update happened
-// 				return true;
-// 			}
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            int id = rs.getInt("id");
+            User_registration user = new User_registration(id, email, password);
+            return Optional.of(user);
+        } else {
+            return Optional.empty();
+        }
+    } catch (SQLException e) {
+        // Handle the exception or rethrow it
+        throw e;
+    }
+}
 
-// 		} catch (SQLIntegrityConstraintViolationException e) {
-// 	        System.out.println("Error: Duplicate entry detected. This movie is already being tracked.");
-// 		    return false; 
-// 		} catch(SQLException e) {
-// 			e.printStackTrace();
-// 			return false;
-// 		}
-// 		return false;
-// 	}
-	
-	
-// 	@Override
-// 	public boolean updateMovieProgress(User user, int movie_id, String newStatus) {
-// 		try(PreparedStatement pstmt = conn.prepareStatement("update user_movie set status = ? where user_id = ? and movie_id = ?");){
-// 			pstmt.setString(1, newStatus);
-// 			pstmt.setInt(2, user.getUserId());
-// 			pstmt.setInt(3, movie_id);
+@Override
+public boolean addMovieRating(User_registration user, int movieId, double rating) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement("INSERT INTO ratings (userId, movieId, rating) VALUES (?, ?, ?)");
+    stmt.setInt(1, user.getUserId());
+    stmt.setInt(2, movieId);
+    stmt.setDouble(3, rating);
 
-// 			int count = pstmt.executeUpdate();
-// 			if(count > 0) {
-// 				return true;
-// 			}
+    int affectedRows = stmt.executeUpdate();
+    return affectedRows > 0;
+}
 
-// 		} catch(SQLException e) {
-// 			return false;
-// 		} 
-// 		return false;
-// 	}	
-	
-// 	public List<UserMovieProgression> getListOfMoviesTracked(User user) {
-// 		List<UserMovieProgression> moviesTracked = new ArrayList<>();
-// 		try(PreparedStatement pstmt = conn.prepareStatement("select * from user_movie where user_id = ?");){
-// 			pstmt.setInt(1, user.getUserId());
-// 			ResultSet rs = pstmt.executeQuery();
-			
-// 			while(rs.next()) {
-// 				int userId = rs.getInt("user_id");
-// 				int movieId = rs.getInt("movie_id");
-// 				String status = rs.getString("status");
+@Override
+public List<Movie> getRatedMovies(User_registration user) throws SQLException {
+    PreparedStatement stmt = conn.prepareStatement("SELECT m.id, m.title, r.rating FROM movies m INNER JOIN ratings r ON m.id = r.movie_id WHERE r.user_id = ?");
+    stmt.setInt(1, user.getUserId());
 
-// 				UserMovieProgression tracked = new UserMovieProgression(userId, movieId, status);
-				
-// 				// adding the movie into the movie list
-// 				moviesTracked.add(tracked);
-// 			}
-			
-			
-// 		} catch(SQLException e) {
-// 			// uncomment of you're running into issues and want to know what's
-// 			// going on
-// //			e.printStackTrace();
-// 		}
-// 		return moviesTracked;
-// 	}
+    ResultSet rs = stmt.executeQuery();
+    List<Movie> movies = new ArrayList<>();
+    while (rs.next()) {
+        int id = rs.getInt("id");
+        String title = rs.getString("title");
+        double rating = rs.getDouble("rating");
+        Movie movie = new Movie(id, title, rating);
+        movies.add(movie);
+    }
+    return movies;
+}
 
-//     @Override
-//     public boolean addMovieForProgress(User user, int movie_id) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'addMovieForProgress'");
-//     }
 
-//     @Override
-//     public boolean updateMovieProgress(User user, int movie_id, String newStatus) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'updateMovieProgress'");
-//     }
-
-//     @Override
-//     public List<UserMovieProgression> getListOfMoviesTracked(User user) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'getListOfMoviesTracked'");
-//     }
-
-//     @Override
-//     public boolean addMovieForProgress(User user, int movie_id) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'addMovieForProgress'");
-//     }
-
-//     @Override
-//     public boolean updateMovieProgress(User user, int movie_id, String newStatus) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'updateMovieProgress'");
-//     }
-
-//     @Override
-//     public List<UserMovieProgression> getListOfMoviesTracked(User user) {
-//         // TODO Auto-generated method stub
-//         throw new UnsupportedOperationException("Unimplemented method 'getListOfMoviesTracked'");
-//     }	
 }

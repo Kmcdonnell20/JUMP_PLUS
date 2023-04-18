@@ -6,16 +6,22 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+import Users.User_registration;
+
 public interface UserDao {
-	
-	// public Optional<User> validateUser(String username, String password);
-	
-	// public boolean addMovieForProgress(User user, int movie_id);
 
-	// public boolean updateMovieProgress(User user, int movie_id, String newStatus);
-	
-	// public List<UserMovieProgression> getListOfMoviesTracked(User user);
+    public Optional<User_registration> validateUser(String email, String password) throws SQLException;
 
-	void setConnection() throws FileNotFoundException, ClassNotFoundException, IOException, SQLException;
-	
+	public boolean addMovieRating(User_registration user, int movieId, double rating) throws SQLException;
+
+
+    public User_registration createUser(String email, String password) throws Exception;
+
+    public User_registration login(String email, String password) throws SQLException;
+
+	public List<Movie> getRatedMovies(User_registration user) throws SQLException;
+
+
+
 }
+

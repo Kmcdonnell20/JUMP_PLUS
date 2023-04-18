@@ -14,11 +14,13 @@ public interface MovieDao {
 
 	public List<Movie> getAllMovies();
 	
-	public Optional<Movie> getMovieById(int id);
-		
-	public boolean createMovie(Movie movie);
-		
-	public boolean deleteMovie(int id);
+	public Movie getMovieById(int id);
 
-	public boolean updateMovie(Movie movie);
+	public void rateMovie(int movieId, double rating) throws SQLException;
+
+
+	public void updateMovieRating(int id, double rating);
+
+    public boolean updateMovie(Movie ratedMovie);
+
 }
