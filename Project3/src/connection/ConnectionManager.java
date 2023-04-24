@@ -47,7 +47,7 @@ public class ConnectionManager {
 		System.out.println("Establishing db connection...");
 		try {
 			Connection connection = ConnectionManager.getConnection();
-			System.out.println("Connection made to the movie database!");
+			System.out.println("Connection made to the database!");
 		} catch (FileNotFoundException e) {
 			System.out.println("Couldn't load detail for connection, can't make connection");
 		} catch (ClassNotFoundException e) {
